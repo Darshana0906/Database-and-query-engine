@@ -1,0 +1,6 @@
+mis,name,class,room,home_address,admission_date,password_hash,phone_no,parents_phone_no,hostel_id,created_at
+612415090,Darshana Kulkarni,TY CSE,A-101,"Pune, MH",2023-08-01,x,"{9000000001}","{9100000001}",1,2026-09-01 00:00:00+00
+612415096,Shivani Mahajan,TY CSE,A-102,"Pune, MH",2023-08-01,x,"{9000000002}","{9100000002}",1,2026-09-01 00:00:00+00
+612415101,Aarohi Patil,SY ENTC,B-204,"Nashik, MH",2024-08-02,x,"{9000000003}","{9100000003}",1,2026-09-01 00:00:00+00
+612415117,Meera Joshi,FY Mech,B-210,"Satara, MH",2025-08-03,x,"{9000000004}","{9100000004}",1,2026-09-01 00:00:00+00
+612415123,Ishita Deshmukh,LY CSE,C-305,"Pune, MH",2022-08-01,x,"{9000000005}","{9100000005}",1,2026-09-01 00:00:00+00
