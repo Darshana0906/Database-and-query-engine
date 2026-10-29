@@ -7,11 +7,8 @@
 #include "trie.h"
 #include "itree.h"
 
-#define MAX_COLS 16
 #define MAX_IDX  16
-#define MAX_TABLES 8
-
-typedef struct { char name[32]; ColType type; } Column;
+#define MAX_TABLES 32
 
 typedef struct {
     char name[80];
@@ -32,6 +29,7 @@ typedef struct {
 typedef struct { Table *t[MAX_TABLES]; int n; } Catalog;
 
 void    catalog_init(Catalog *c);                  /* creates the six hostel tables (empty) */
+Table  *catalog_create_table(Catalog *c, const char *name, const Column *cols, int ncols, char *err, size_t en);
 Table  *catalog_find(const Catalog *c, const char *name);
 int     table_col(const Table *t, const char *name);   /* -1 if unknown */
 const char *coltype_name(ColType t);

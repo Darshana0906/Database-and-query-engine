@@ -178,6 +178,35 @@ static int parse_stmt(P *p, Stmt *st) {
     if (accept_kw(p, "SELECT")) { st->kind = ST_SELECT; return parse_select(p, st); }
     if (accept_kw(p, "EXPLAIN")) { st->kind = ST_EXPLAIN; return expect_kw(p, "SELECT") && parse_select(p, st); }
     if (accept_kw(p, "CREATE")) {
+        if (accept_kw(p, "TABLE")) {
+            st->kind = ST_CREATE_TABLE;
+            if (!ident(p, st->table, sizeof st->table) || !expect_sym(p, "(")) return 0;
+            do {
+                if (st->ncreate_cols >= MAX_COLS) FAIL("too many columns (max %d)", MAX_COLS);
+                char col_name[32];
+                if (!ident(p, col_name, sizeof col_name)) return 0;
+                char type_name[32];
+                if (!ident(p, type_name, sizeof type_name)) return 0;
+                if (accept_sym(p, "(")) {
+                    take(p);
+                    if (!expect_sym(p, ")")) return 0;
+                }
+                ColType ct;
+                if (!strcasecmp(type_name, "INT") || !strcasecmp(type_name, "INTEGER") || !strcasecmp(type_name, "BIGINT")) {
+                    ct = T_INT;
+                } else if (!strcasecmp(type_name, "TEXT") || !strcasecmp(type_name, "VARCHAR") || !strcasecmp(type_name, "CHAR") || !strcasecmp(type_name, "STRING")) {
+                    ct = T_TEXT;
+                } else if (!strcasecmp(type_name, "TIMESTAMP") || !strcasecmp(type_name, "TS") || !strcasecmp(type_name, "DATE") || !strcasecmp(type_name, "TIMESTAMPTZ")) {
+                    ct = T_TS;
+                } else {
+                    FAIL("unknown column type '%s' (use INT, TEXT, or TIMESTAMP)", type_name);
+                }
+                snprintf(st->create_cols[st->ncreate_cols].name, sizeof st->create_cols[st->ncreate_cols].name, "%s", col_name);
+                st->create_cols[st->ncreate_cols].type = ct;
+                st->ncreate_cols++;
+            } while (accept_sym(p, ","));
+            return expect_sym(p, ")");
+        }
         st->kind = ST_CREATE_INDEX; st->ix_kind = -1;
         if (!expect_kw(p, "INDEX")) return 0;
         if (peek(p)->k == TK_ID && !is_kw(peek(p), "ON")) { if (!ident(p, st->name, sizeof st->name)) return 0; }

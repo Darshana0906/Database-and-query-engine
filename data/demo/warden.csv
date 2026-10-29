@@ -1,2 +1,6 @@
 id,username,name,mobile_no,password_hash,hostel_id
 1,warden1,Mrs. Kulkarni (Warden),"{9888800001}",x,1
+2,warden2,Mr. Shinde (Warden),"{9888800002}",x,2
+3,warden3,Mr. Patil (Warden),"{9888800003}",x,3
+4,warden4,Mrs. Joshi (Warden),"{9888800004}",x,4
+5,warden5,Dr. Deshmukh (Warden),"{9888800005}",x,5

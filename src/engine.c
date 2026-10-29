@@ -454,7 +454,7 @@ static int run_select(Catalog *cat, const Stmt *st, int explain, FILE *out, int 
     ExecInfo local = { 0 }; ExecInfo *inf = info ? info : &local;
     inf->rows = (int64_t)nrows; inf->scanned = scanned; inf->ms = ms; inf->checksum = 0;
     emit(out, print_rows, inf, &pl, oc, noc, agg ? NULL : tv.a, agg ? groups : NULL, nrows);
-    if (print_rows) fprintf(out, "(%zu row%s)   [%s | scanned %lld rows | %.3f ms]\n", nrows, nrows == 1 ? "" : "s", summary, (long long)scanned, ms);
+    fprintf(out, "(%zu row%s)   [%s | scanned %lld rows | %.3f ms]\n", nrows, nrows == 1 ? "" : "s", summary, (long long)scanned, ms);
     free(tv.a); free(groups);
     return 1;
 }
@@ -484,6 +484,13 @@ static int run_create_index(Catalog *cat, const Stmt *st, FILE *out, char *err, 
     return 1;
 }
 
+static int run_create_table(Catalog *cat, const Stmt *st, FILE *out, char *err, size_t en) {
+    Table *t = catalog_create_table(cat, st->table, st->create_cols, st->ncreate_cols, err, en);
+    if (!t) return 0;
+    fprintf(out, "CREATE TABLE %s (%d column%s)\n", t->name, t->ncols, t->ncols == 1 ? "" : "s");
+    return 1;
+}
+
 static int run_insert(Catalog *cat, const Stmt *st, FILE *out, char *err, size_t en) {
     Table *t = catalog_find(cat, st->table);
     if (!t) { snprintf(err, en, "unknown table '%s'", st->table); return 0; }
@@ -501,6 +508,7 @@ static int run_insert(Catalog *cat, const Stmt *st, FILE *out, char *err, size_t
 void engine_help(FILE *out) {
     fputs(
 "Statements (end with ;)\n"
+"  CREATE TABLE <table> (col type, ...);               types: INT, TEXT, TIMESTAMP\n"
 "  LOAD <table> FROM 'file.csv';                       bulk-load a CSV exported from PostgreSQL\n"
 "  CREATE INDEX [name] ON t (col) [USING BTREE|HASH|TRIE];\n"
 "  CREATE INDEX [name] ON t (start_col, end_col) USING INTERVAL;\n"
@@ -523,6 +531,7 @@ int engine_exec(Catalog *cat, const Stmt *st, FILE *out, int print_rows, ExecInf
     case ST_SELECT:  return run_select(cat, st, 0, out, print_rows, info, err, en);
     case ST_EXPLAIN: return run_select(cat, st, 1, out, print_rows, info, err, en);
     case ST_CREATE_INDEX: return run_create_index(cat, st, out, err, en);
+    case ST_CREATE_TABLE: return run_create_table(cat, st, out, err, en);
     case ST_INSERT:  return run_insert(cat, st, out, err, en);
     case ST_DROP_INDEX:
         for (int i = 0; i < cat->n; i++) if (table_drop_index(cat->t[i], st->name)) { fprintf(out, "DROP INDEX %s\n", st->name); return 1; }

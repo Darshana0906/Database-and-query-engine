@@ -31,6 +31,26 @@ void catalog_init(Catalog *c) {
     }
 }
 
+Table *catalog_create_table(Catalog *c, const char *name, const Column *cols, int ncols, char *err, size_t en) {
+    if (c->n >= MAX_TABLES) { snprintf(err, en, "maximum table limit (%d) reached", MAX_TABLES); return NULL; }
+    if (catalog_find(c, name)) { snprintf(err, en, "table '%s' already exists", name); return NULL; }
+    if (ncols <= 0 || ncols > MAX_COLS) { snprintf(err, en, "invalid column count (%d)", ncols); return NULL; }
+    for (int i = 0; i < ncols; i++) {
+        for (int j = i + 1; j < ncols; j++) {
+            if (!strcasecmp(cols[i].name, cols[j].name)) {
+                snprintf(err, en, "duplicate column name '%s'", cols[i].name);
+                return NULL;
+            }
+        }
+    }
+    Table *t = xcalloc(1, sizeof *t);
+    snprintf(t->name, sizeof t->name, "%s", name);
+    t->ncols = ncols;
+    for (int i = 0; i < ncols; i++) t->cols[i] = cols[i];
+    c->t[c->n++] = t;
+    return t;
+}
+
 Table *catalog_find(const Catalog *c, const char *name) {
     for (int i = 0; i < c->n; i++) if (!strcasecmp(c->t[i]->name, name)) return c->t[i];
     return NULL;

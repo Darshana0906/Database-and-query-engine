@@ -17,7 +17,7 @@ typedef enum { OP_EQ, OP_NE, OP_LT, OP_LE, OP_GT, OP_GE, OP_LIKE, OP_ISNULL, OP_
 typedef struct { PredOp op; ColRef ref, ref2; Lit lit, lit2; } Pred;
 
 typedef enum {
-    ST_EMPTY, ST_SELECT, ST_EXPLAIN, ST_CREATE_INDEX, ST_DROP_INDEX, ST_LOAD,
+    ST_EMPTY, ST_SELECT, ST_EXPLAIN, ST_CREATE_INDEX, ST_CREATE_TABLE, ST_DROP_INDEX, ST_LOAD,
     ST_SHOW_TABLES, ST_SHOW_INDEXES, ST_DESCRIBE, ST_INSERT, ST_HELP, ST_QUIT
 } StmtKind;
 
@@ -36,6 +36,7 @@ typedef struct {
     int ix_kind;                                 /* -1 = choose by column type, else IndexKind */
     char path[256];
     Lit vals[MAX_VALS]; int nvals;
+    Column create_cols[MAX_COLS]; int ncreate_cols;
 } Stmt;
 
 int sql_parse(const char *text, Stmt *out, char *err, size_t en);   /* 1 = ok */

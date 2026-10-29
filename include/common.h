@@ -7,6 +7,9 @@
 typedef enum { T_INT = 0, T_TEXT = 1, T_TS = 2 } ColType;
 typedef enum { IX_BTREE = 0, IX_HASH = 1, IX_TRIE = 2, IX_INTERVAL = 3 } IndexKind;
 
+#define MAX_COLS 16
+typedef struct { char name[32]; ColType type; } Column;
+
 /* One cell. TEXT strings are arena-owned (never freed individually). */
 typedef struct {
     int64_t     i;     /* INT value, or TS as Unix seconds (UTC) */

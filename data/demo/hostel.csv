@@ -1,2 +1,6 @@
 id,name,address,latitude,longitude,geofence_radius_m,gate_closure_time
 1,Girls Hostel (Demo),"College of Engineering Pune, Shivajinagar",18.5293,73.8566,150,21:00:00
+2,Boys Hostel Block A,"College of Engineering Pune, Shivajinagar",18.5290,73.8560,150,21:30:00
+3,Boys Hostel Block B,"College of Engineering Pune, Shivajinagar",18.5295,73.8562,150,21:30:00
+4,Girls Hostel Block B,"College of Engineering Pune, Shivajinagar",18.5298,73.8570,150,21:00:00
+5,PG / Research Hostel,"College of Engineering Pune, Shivajinagar",18.5285,73.8555,150,22:00:00
