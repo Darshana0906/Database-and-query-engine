@@ -1,4 +1,4 @@
-# Query engine in C for the hostel entry system
+# Query engine in C for the hostel entry database
 
 **Course:** Advanced Data Structures (ADS)  **Language:** C11, standard library only
 
