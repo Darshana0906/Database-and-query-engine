@@ -1,4 +1,4 @@
-# GateDB: a query engine in C for the hostel entry system
+# Query engine in C for the hostel entry system
 
 **Course:** Advanced Data Structures (ADS)  **Language:** C11, standard library only
 **Baseline:** the *Digital Hostel Entry System* (PostgreSQL schema + Node/React app).
@@ -10,7 +10,7 @@ PostgreSQL stays the reference database; GateDB re-implements the part that answ
 *measure* what each data structure buys you.
 
 ```
- PostgreSQL (hostel_entry)                         GateDB (this project, pure C)
+ PostgreSQL (hostel_entry)                         HostelDB (this project, pure C)
  ┌──────────────────────┐   \copy ... CSV    ┌──────────────────────────────────────────────┐
  │ hostel, student,     │ ─────────────────► │ CSV loader ─► row store ─► indexes           │
  │ entry_exit_log, ...  │                    │ SQL text ─► lexer ─► parser ─► planner ─►    │
@@ -69,11 +69,6 @@ INSERT INTO t VALUES (...);                      -- every index is updated incre
     [GROUP BY col] [ORDER BY col|COUNT(*) [ASC|DESC]] [LIMIT n];
 ```
 
-Shell commands: `\i file.sql`, `\rows on|off`, `\opt indexes on|off`, `\opt heap on|off`, `\q`.
-`\opt indexes off` forces full scans so you can compare any query with and without indexes.
-Every `SELECT` prints a footer such as `[student: trie | scanned 63 rows | 0.011 ms]`.
-Not supported (deliberately): `OR`, subqueries, `UPDATE`, `DELETE`, outer joins, multi-way joins.
-
 ## The data structures
 
 | Structure | File | Used for | Insert | Lookup | Notes |
@@ -112,35 +107,6 @@ QUERY PLAN
   Join  INDEX NESTED LOOP  entry_exit_log.student_mis = student.mis  probing hash index idx_student_mis
 ```
 
-## Correctness testing
-
-* `tests/test_structs.c`: 1,100+ checks. Each structure is compared with a brute-force reference on random data
-  (60k B+ tree entries with heavy duplicate keys, 30k intervals including open-ended ones, case-insensitive prefixes,
-  top-K vs sorted array). B+ tree and treap invariants are validated structurally.
-* `tests/test_engine.c`: 20 queries run **twice**: indexes forced off (reference) vs indexes on. Row counts and an
-  order-independent checksum must match; `ORDER BY` queries must match *exactly*. It also checks that indexes shrink
-  the scanned-row count, that `INSERT` keeps all indexes consistent, and that 16 kinds of bad SQL return errors, not crashes.
-* `make asan` runs both under AddressSanitizer + UndefinedBehaviorSanitizer.
-
-## Benchmark (`make bench`)
-
-Measured in a Linux sandbox, `-O2`, single thread: 50,000 students, 349,903 log rows over 20 days (synthetic data from
-`tools/gen.c`). Your numbers will differ; the *ratios* are what matter. "off" = indexes ignored.
-
-| Scenario | scanned off | scanned on | ms off | ms on | speedup |
-|---|---:|---:|---:|---:|---:|
-| point lookup by MIS (hash) | 50,000 | 1 | 0.62 | 0.001 | ~1000x |
-| name prefix `Ra%` (trie) | 50,000 | 1,678 | 0.77 | 0.11 | 7x |
-| 4-hour time window (B+ tree) | 349,903 | 6,374 | 7.2 | 0.38 | 19x |
-| outside during 1 hour (interval tree) | 349,903 | 6,280 | 6.1 | 0.84 | 7x |
-| open logs `status='OUT'` (hash) | 349,903 | 378 | 8.5 | 0.014 | ~600x |
-| join: who is outside (index NL join) | 399,903 | 756 | 37 | 0.16 | ~240x |
-| join: logs of names `Zo%` (trie + index) | 399,903 | 13,240 | 97 | 1.0 | ~90x |
-| top-10 latest exits (heap vs full sort) | 349,903 | 349,903 | 136 | 28 | 5x |
-| `GROUP BY hostel` | 50,000 | 50,000 | 4.8 | 5.2 | ~1x (no index applies) |
-
-Index build times (350k rows): hash 11-54 ms, B+ tree 42-50 ms, trie 6 ms, interval tree 146 ms.
-
 ## Project layout
 
 ```
@@ -152,26 +118,3 @@ scripts/           demo.sql, export_from_postgres.sh
 data/demo/         6 CSVs modelled on the app's seed data (5 students; phone numbers are placeholders)
 ```
 
-## Likely viva questions
-
-* **Why a B+ tree and not a B-tree or BST?** Records live only in leaves, linked in a chain, so a range query is one
-  descent plus a sequential walk; high fan-out gives height 5 for 350k entries (fewer cache/disk touches).
-* **How do duplicate keys work?** The tree orders the pair `(key, row id)`, so duplicates never tie and range search
-  starts from `(lo, -inf)`.
-* **Why does the interval tree store a max-end per node?** It lets the search skip a whole left subtree when
-  `maxEnd < query start`, giving O(log n + k) instead of a scan. Open trips (NULL end) use +infinity.
-* **Why a treap?** Random priorities keep it balanced in expectation with only two rotations and no case analysis;
-  measured height is 44 for 350k nodes (a perfect tree would be 19).
-* **Trie vs hash for names?** A hash cannot answer a prefix query; the trie does it in O(L + k).
-* **Why re-check predicates after an index lookup?** The index only narrows candidates; re-checking makes
-  correctness independent of the bound arithmetic.
-* **Why top-K with a heap?** O(n log k) time and O(k) memory vs sorting all n rows. Measured: 5x faster here.
-* **What does the optimizer do wrong?** It is rule-based, not cost-based: no statistics, so it cannot tell that a
-  predicate matches 90% of the table (where a scan beats an index). Cost-based selection with histograms is the natural extension.
-
-## Limitations and extension ideas
-
-* In-memory only (no pages, buffer pool or persistence); no `UPDATE`/`DELETE` (would need index deletion, e.g. B+ tree
-  merge/borrow); no `OR`, no multi-way joins; no ordered index scan for `ORDER BY` (the heap handles top-K instead).
-* Extensions: B+ tree deletion, persistent pages + LRU buffer pool, cost-based optimizer with histograms, Bloom filter
-  in front of the hash index, and a timing-wheel/heap scheduler for the 9 PM alert sweep.
