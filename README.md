@@ -1,9 +1,10 @@
 # Query engine in C for the hostel entry system
 
 **Course:** Advanced Data Structures (ADS)  **Language:** C11, standard library only
+
 **Baseline:** the *Digital Hostel Entry System* (PostgreSQL schema + Node/React app).
 
-GateDB is a small in-memory database engine. It reads the hostel system's tables (exported from PostgreSQL as CSV),
+Query engine is a small in-memory database engine. It reads the hostel system's tables (exported from PostgreSQL as CSV),
 parses a SQL subset, picks an access path with a rule-based optimizer, and executes queries using data structures
 implemented from scratch: **B+ tree, hash index, trie, interval tree (augmented treap) and binary heap**.
 PostgreSQL stays the reference database; GateDB re-implements the part that answers the hostel queries and lets you
