@@ -2,12 +2,12 @@
 
 **Course:** Advanced Data Structures (ADS)  **Language:** C11, standard library only
 
-**Baseline:** the *Digital Hostel Entry System* (PostgreSQL schema + Node/React app).
+**Baseline:** the *Digital Hostel Entry System* (PostgreSQL schema).
 
 Query engine is a small in-memory database engine. It reads the hostel system's tables (exported from PostgreSQL as CSV),
 parses a SQL subset, picks an access path with a rule-based optimizer, and executes queries using data structures
 implemented from scratch: **B+ tree, hash index, trie, interval tree (augmented treap) and binary heap**.
-PostgreSQL stays the reference database; GateDB re-implements the part that answers the hostel queries and lets you
+PostgreSQL stays the reference database; HostelDB re-implements the part that answers the hostel queries and lets you
 *measure* what each data structure buys you.
 
 ```
@@ -46,7 +46,7 @@ Columns that GateDB's schema does not model (passwords, coordinates...) are igno
 
 ## What each feature of the hostel system maps to
 
-| Hostel-system question | GateDB query | Data structure doing the work |
+| Hostel-system question | HostelDB query | Data structure doing the work |
 |---|---|---|
 | Look up a student by MIS (login, profile) | `WHERE mis = '612415096'` | **Hash index** |
 | Warden's search box: names starting with "Sh" | `WHERE name LIKE 'sh%'` | **Trie** (case-insensitive prefix walk) |
